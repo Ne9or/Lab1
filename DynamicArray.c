@@ -46,13 +46,13 @@ void print_array(Array* array) {
     printf("Array contents (%d/%d):\n", array->size, array->capacity);
     
     for (int i = 0; i < array->size; i++) {
-        // Handle different data types
+        
         switch (array->type_size) {
-            case sizeof(int):  // Integer case
+            case sizeof(int):  
                 printf("[%d] %d\n", i, *(int*)array->data[i]);
                 break;
                 
-            case sizeof(char*):  // String case
+            case sizeof(char*):  
                 printf("[%d] %s\n", i, (char*)array->data[i]);
                 break;
                 
@@ -72,18 +72,17 @@ void free_array(Array* array) {
 }
 
 void sort_array(Array* array) {
-    bool swapped;
-    do {
-        swapped = false;
-        for (int i = 0; i < array->size - 1; i++) {
-            if (!array->comparator(array->data[i], array->data[i+1])) {
-                void* temp = array->data[i];
-                array->data[i] = array->data[i+1];
-                array->data[i+1] = temp;
-                swapped = true;
+    if (!array || !array->comparator || array->size <= 1) return;
+
+    for (int i = 0; i < array->size - 1; i++) {
+        for (int j = 0; j < array->size - i - 1; j++) {
+            if (array->comparator(array->data[j], array->data[j+1]) > 0) {
+                void* temp = array->data[j];
+                array->data[j] = array->data[j+1];
+                array->data[j+1] = temp;
             }
         }
-    } while (swapped);
+    }
 }
 
 Array* map(Array* array, void* (*process)(void*)) {

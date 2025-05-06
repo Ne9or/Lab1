@@ -1,143 +1,122 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include <ctype.h>
+#include "DynamicArray.h"
+#include "int_functions.h"
+#include "str_functions.h"
 
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include "DynamicArray.h"
-// #include "int_functions.h"
-// #include "str_functions.h"
+#ifndef RESET_ON_FAIL
+#define RESET_ON_FAIL 0
+#endif
 
-// void test_init_array() {
-//     Array* array = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     if (array == NULL) {
-//         printf("ERROR: init_array failed\n");
-//         return;
-//     } else {
-//         printf("test_init_array passed\n");
-//     }
-//     free_array(array);
-// }
+#ifndef VERBOSE_PASS
+#define VERBOSE_PASS 1
+#endif
 
-// void test_push_array() {
-//     Array* array = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     int x = 42;
-//     push_array(array, &x);
-//     if (array->size != 1 || *((int*)array->data[0]) != 42) {
-//         printf("ERROR: push_array failed\n");
-//     } else {
-//         printf("test_push_array passed\n");
-//     }
-//     free_array(array);
+#define ASSERT1(ast, msg) \
+do { \
+    if (ast) { \
+        if (VERBOSE_PASS) printf("TEST %s PASSED\n", msg); \
+        else puts("."); \
+    } \
+    else { \
+        fprintf(stderr, "TEST %s FAILED (Line %d: %s)\n", msg, __LINE__, #ast); \
+        if (RESET_ON_FAIL) exit(1); \
+    } \
+} while (0)
+
+void test_init_int_array() {
+    Array* arr = init_array(sizeof(int), 5, print_integers, compare_int);
+    ASSERT1(arr != NULL, "init_int_array: non-NULL return");
+    ASSERT1(arr->capacity == 5, "init_int_array: correct capacity");
+    ASSERT1(arr->size == 0, "init_int_array: initial count is 0");
+    free_array(arr);
+}
+
+void test_push_int_array() {
+    Array* arr = init_array(sizeof(int), 3, print_integers, compare_int);
+    int x = 42, y = 100;
+
+    push_array(arr, &x);
+    ASSERT1(arr->size == 1, "push_int_array: count increments");
+    ASSERT1(*(int*)arr->data[0] == 42, "push_int_array: correct value stored");
+
+    push_array(arr, &y);
+    ASSERT1(*(int*)arr->data[1] == 100, "push_int_array: second value correct");
     
-// }
+    free_array(arr);
+}
 
-// void test_sort_array() {
-//     Array* array = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     int arr[] = {5, 2, 8, 1, 3};
-//     for (int i = 0; i < 5; i++) {
-//         push_array(array, &arr[i]);
-//     }
-//     sort_array(array);
-//     int expected[] = {1, 2, 3, 5, 8};
-//     for (int i = 0; i < 5; i++) {
-//         if (*((int*)array->data[i]) != expected[i]) {
-//             printf("ERROR: sort_array failed\n");
-//             break;
-//         }
-//     }
-//     free_array(array);
-//     printf("test_sort_array passed\n");
-// }
+void test_sort_int_array() {
+    Array* arr = init_array(sizeof(int), 3, print_integers, compare_int);
+    int values[] = {30, 10, 20};
+    for (int i = 0; i < 3; i++) push_array(arr, &values[i]);
 
-// void test_concatenation() {
-//     Array* array1 = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     Array* array2 = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     int arr1[] = {1, 2, 3};
-//     int arr2[] = {4, 5, 6};
-//     for (int i = 0; i < 3; i++) {
-//         push_array(array1, &arr1[i]);
-//         push_array(array2, &arr2[i]);
-//     }   
-//     Array* result = concatenation(array1, array2);
-//     int expected[] = {1, 2, 3, 4, 5, 6};
-//     for (int i = 0; i < 6; i++) {
-//         if (*((int*)result->data[i]) != expected[i]) {
-//             printf("ERROR: concatenation failed\n");
-//             break;
-//         }
-//     }
-//     free_array(array1);
-//     free_array(array2);
-//     free_array(result);
-//     printf("test_concatenation passed\n");
-// }
+    sort_array(arr);
+    ASSERT1(*(int*)arr->data[0] == 10, "sort_int_array: first element");
+    ASSERT1(*(int*)arr->data[1] == 20, "sort_int_array: second element");
+    ASSERT1(*(int*)arr->data[2] == 30, "sort_int_array: third element");
 
-// void test_where() {
-//     Array* array = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     int arr[] = {1, 2, 3, 4, 5, 6};
-//     for (int i = 0; i < 6; i++) {
-//         push_array(array, &arr[i]);
-//     }
-//     Array* result = where(array, is_even);
-//     int expected[] = {2, 4, 6};
-//     if (result->size != 3) {
-//         printf("ERROR: where failed\n");
-//     } else {
-//         for (int i = 0; i < 3; i++) {
-//             if (*((int*)result->data[i]) != expected[i]) {
-//                 printf("ERROR: where failed\n");
-//                 break;
-//             }
-//         }
-//     }
-//     free_array(array);
-//     free_array(result);
-//     printf("test_where passed\n");
-// }
+    free_array(arr);
+}
 
-// void test_map() {
-//     Array* array = create_dynamic_array(sizeof(int), print_integers, compare_int);
-//     int arr[] = {1, 2, 3};
-//     for (int i = 0; i < 3; i++) {
-//         push_array(array, &arr[i]);
-//     }
-//     Array* result = map(array, cube);
-//     int expected[] = {1, 8, 27};
-//     for (int i = 0; i < 3; i++) {
-//         if (*((int*)result->data[i]) != expected[i]) {
-//             printf("ERROR: map failed\n");
-//             break;
-//         }
-//     }
-//     free_array(array);
-//     free_array(result);
-//     printf("test_map passed\n");
-// }
 
-// void test_str_functions() {
-//     Array* array = create_dynamic_array(256, print_strings, compare_str);
-//     char* str1 = "hello";
-//     char* str2 = "world";
-//     push_array(array, str1);
-//     push_array(array, str2);
+void test_compare_str() {
+    char *s1 = "apple";
+    char *s2 = "banana";
+    char *s3 = "apple";
 
-//     Array* result = where(array, is_all_alphas);
-//     if (result->size != 2) {
-//         printf("ERROR: is_all_alphas failed\n");
-//     } else {
-//         printf("test_is_all_alphas passed\n");
-//     }
+    ASSERT1(compare_str(&s1, &s2) < 0, "compare_str: s1 < s2");
+    ASSERT1(compare_str(&s2, &s1) > 0, "compare_str: s2 > s1");
+    ASSERT1(compare_str(&s1, &s3) == 0, "compare_str: s1 == s3");
+}
 
-//     result = map(array, to_uppercase);
-//     char* expected1 = "HELLO";
-//     char* expected2 = "WORLD";
-//     if (strcmp((char*)result->data[0], expected1) != 0 || strcmp((char*)result->data[1], expected2) != 0) {
-//         printf("ERROR: to_uppercase failed\n");
-//     } else {
-//         printf("test_to_uppercase passed\n");
-//     }
+void test_is_all_alphas() {
+    char *valid = "Hello";
+    char *invalid = "H3llo!";
 
-//     free_array(array);
-//     free_array(result);
-//     printf("test_str_functions passed\n");
-// }
+    ASSERT1(is_all_alphas(valid) == 1, "is_all_alphas: valid string");
+    ASSERT1(is_all_alphas(invalid) == 0, "is_all_alphas: invalid string");
+}
 
+void test_to_uppercase() {
+    char *input = "aBc123";
+    char *expected = "ABC123";
+    char *result = (char *)to_uppercase(input);
+
+    ASSERT1(strcmp(result, expected) == 0, "to_uppercase: correct conversion");
+    free(result);
+}
+
+void test_str_array_operations() {
+    Array* arr = init_array(sizeof(char*), 3, print_strings, compare_str);
+    char *strings[] = {"hello", "world", "test"};
+    
+    for (int i = 0; i < 3; i++) {
+        push_array(arr, &strings[i]);
+    }
+    
+    ASSERT1(arr->size == 3, "str_array_operations: correct count");
+    ASSERT1(strcmp(*(char**)arr->data[0], "hello") == 0, "str_array_operations: first element");
+    
+    free_array(arr);
+}
+
+
+int main() {
+    printf("=== Running Integer Array Tests ===\n");
+    test_init_int_array();
+    test_push_int_array();
+    test_sort_int_array();
+
+    printf("\n=== Running String Array Tests ===\n");
+    test_compare_str();
+    test_is_all_alphas();
+    test_to_uppercase();
+    test_str_array_operations();
+
+    printf("\nAll automated tests completed.\n");
+    return 0;
+}
